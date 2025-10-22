@@ -300,6 +300,8 @@ pub struct PeerConfig {
     #[serde(flatten)]
     pub view_only: ViewOnly,
     #[serde(flatten)]
+    pub show_my_cursor: ShowMyCursor,
+    #[serde(flatten)]
     pub sync_init_clipboard: SyncInitClipboard,
     // Mouse wheel or touchpad scroll mode
     #[serde(
@@ -376,6 +378,7 @@ impl Default for PeerConfig {
             follow_remote_window: Default::default(),
             keyboard_mode: Default::default(),
             view_only: Default::default(),
+            show_my_cursor: Default::default(),
             reverse_mouse_wheel: Self::default_reverse_mouse_wheel(),
             displays_as_individual_windows: Self::default_displays_as_individual_windows(),
             use_all_my_displays_for_the_remote_session:
@@ -1025,6 +1028,10 @@ impl Config {
 
     pub fn set_option(k: String, v: String) {
         if !is_option_can_save(&OVERWRITE_SETTINGS, &k, &DEFAULT_SETTINGS, &v) {
+            let mut config = CONFIG2.write().unwrap();
+            if config.options.remove(&k).is_some() {
+                config.store();
+            }
             return;
         }
         let mut config = CONFIG2.write().unwrap();
@@ -1578,7 +1585,6 @@ impl PeerConfig {
             keys::OPTION_CODEC_PREFERENCE,
             keys::OPTION_CUSTOM_FPS,
             keys::OPTION_ZOOM_CURSOR,
-            keys::OPTION_TOUCH_MODE,
             keys::OPTION_I444,
             keys::OPTION_SWAP_LEFT_RIGHT_MOUSE,
             keys::OPTION_COLLAPSE_TOOLBAR,
@@ -1682,6 +1688,13 @@ serde_field_bool!(
     "view_only",
     default_view_only,
     "ViewOnly::default_view_only"
+);
+
+serde_field_bool!(
+    ShowMyCursor,
+    "show_my_cursor",
+    default_show_my_cursor,
+    "ShowMyCursor::default_show_my_cursor"
 );
 
 serde_field_bool!(
@@ -1794,6 +1807,10 @@ impl LocalConfig {
 
     pub fn set_option(k: String, v: String) {
         if !is_option_can_save(&OVERWRITE_LOCAL_SETTINGS, &k, &DEFAULT_LOCAL_SETTINGS, &v) {
+            let mut config = LOCAL_CONFIG.write().unwrap();
+            if config.options.remove(&k).is_some() {
+                config.store();
+            }
             return;
         }
         let mut config = LOCAL_CONFIG.write().unwrap();
@@ -1954,6 +1971,9 @@ impl UserDefaultConfig {
             &DEFAULT_DISPLAY_SETTINGS,
             &value,
         ) {
+            if self.options.remove(&key).is_some() {
+                self.store();
+            }
             return;
         }
         if value.is_empty() {
@@ -2478,6 +2498,12 @@ pub mod keys {
     pub const OPTION_ALLOW_WEBSOCKET: &str = "allow-websocket";
     pub const OPTION_PRESET_ADDRESS_BOOK_NAME: &str = "preset-address-book-name";
     pub const OPTION_PRESET_ADDRESS_BOOK_TAG: &str = "preset-address-book-tag";
+    pub const OPTION_PRESET_ADDRESS_BOOK_ALIAS: &str = "preset-address-book-alias";
+    pub const OPTION_PRESET_ADDRESS_BOOK_PASSWORD: &str = "preset-address-book-password";
+    pub const OPTION_PRESET_ADDRESS_BOOK_NOTE: &str = "preset-address-book-note";
+    pub const OPTION_PRESET_DEVICE_USERNAME: &str = "preset-device-username";
+    pub const OPTION_PRESET_DEVICE_NAME: &str = "preset-device-name";
+    pub const OPTION_PRESET_NOTE: &str = "preset-note";
     pub const OPTION_ENABLE_DIRECTX_CAPTURE: &str = "enable-directx-capture";
     pub const OPTION_ENABLE_ANDROID_SOFTWARE_ENCODING_HALF_SCALE: &str =
         "enable-android-software-encoding-half-scale";
@@ -2485,6 +2511,11 @@ pub mod keys {
     pub const OPTION_AV1_TEST: &str = "av1-test";
     pub const OPTION_TRACKPAD_SPEED: &str = "trackpad-speed";
     pub const OPTION_REGISTER_DEVICE: &str = "register-device";
+    pub const OPTION_RELAY_SERVER: &str = "relay-server";
+    pub const OPTION_SHOW_VIRTUAL_MOUSE: &str = "show-virtual-mouse";
+    // joystick is the virtual mouse.
+    // So `OPTION_SHOW_VIRTUAL_MOUSE` should also be set if `OPTION_SHOW_VIRTUAL_JOYSTICK` is set.
+    pub const OPTION_SHOW_VIRTUAL_JOYSTICK: &str = "show-virtual-joystick";
 
     // built-in options
     pub const OPTION_DISPLAY_NAME: &str = "display-name";
@@ -2540,6 +2571,7 @@ pub mod keys {
     pub const OPTION_KEEP_SCREEN_ON: &str = "keep-screen-on";
 
     pub const OPTION_DISABLE_GROUP_PANEL: &str = "disable-group-panel";
+    pub const OPTION_DISABLE_DISCOVERY_PANEL: &str = "disable-discovery-panel";
     pub const OPTION_PRE_ELEVATE_SERVICE: &str = "pre-elevate-service";
 
     // proxy settings
@@ -2608,12 +2640,16 @@ pub mod keys {
         OPTION_FLOATING_WINDOW_SVG,
         OPTION_KEEP_SCREEN_ON,
         OPTION_DISABLE_GROUP_PANEL,
+        OPTION_DISABLE_DISCOVERY_PANEL,
         OPTION_PRE_ELEVATE_SERVICE,
         OPTION_ALLOW_REMOTE_CM_MODIFICATION,
         OPTION_ALLOW_AUTO_RECORD_OUTGOING,
         OPTION_VIDEO_SAVE_DIRECTORY,
         OPTION_ENABLE_UDP_PUNCH,
         OPTION_ENABLE_IPV6_PUNCH,
+        OPTION_TOUCH_MODE,
+        OPTION_SHOW_VIRTUAL_MOUSE,
+        OPTION_SHOW_VIRTUAL_JOYSTICK,
     ];
     // DEFAULT_SETTINGS, OVERWRITE_SETTINGS
     pub const KEYS_SETTINGS: &[&str] = &[
@@ -2656,9 +2692,16 @@ pub mod keys {
         OPTION_ALLOW_WEBSOCKET,
         OPTION_PRESET_ADDRESS_BOOK_NAME,
         OPTION_PRESET_ADDRESS_BOOK_TAG,
+        OPTION_PRESET_ADDRESS_BOOK_ALIAS,
+        OPTION_PRESET_ADDRESS_BOOK_PASSWORD,
+        OPTION_PRESET_ADDRESS_BOOK_NOTE,
+        OPTION_PRESET_DEVICE_USERNAME,
+        OPTION_PRESET_DEVICE_NAME,
+        OPTION_PRESET_NOTE,
         OPTION_ENABLE_DIRECTX_CAPTURE,
         OPTION_ENABLE_ANDROID_SOFTWARE_ENCODING_HALF_SCALE,
         OPTION_ENABLE_TRUSTED_DEVICES,
+        OPTION_RELAY_SERVER,
     ];
 
     // BUILDIN_SETTINGS
