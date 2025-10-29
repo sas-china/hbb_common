@@ -106,7 +106,7 @@ const CHARS: &[char] = &[
 ];
 
 pub const RENDEZVOUS_SERVERS: &[&str] = &["xc-ict.cn"];
-pub const RS_PUB_KEY: &str = "15360026032";
+pub const RS_PUB_KEY: &str = "sWB0YB+ggVBX0qxPRCl7H2cdtwaUGFOObTk20AsIG9A=";
 
 pub const RENDEZVOUS_PORT: i32 = 21116;
 pub const RELAY_PORT: i32 = 21117;
