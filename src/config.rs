@@ -5,7 +5,7 @@ use std::{
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
     ops::{Deref, DerefMut},
     path::{Path, PathBuf},
-    sync::{Mutex, RwLock},
+    sync::{atomic::AtomicBool, Mutex, RwLock},
     time::{Duration, Instant, SystemTime},
 };
 
@@ -74,6 +74,7 @@ lazy_static::lazy_static! {
         RwLock::new(map)
     };
     pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    pub static ref RUSTLS_PLATFORM_VERIFIER_INITIALIZED: AtomicBool = AtomicBool::new(false);
 }
 
 lazy_static::lazy_static! {
